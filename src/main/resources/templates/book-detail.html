@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common-head :: head('图书详情')}"></head>
+<body class="d-flex">
+
+<th:block th:replace="~{fragments/sidebar :: sidebar}"></th:block>
+
+<main class="content-area flex-grow-1">
+    <th:block th:replace="~{fragments/header :: header('图书详情')}"></th:block>
+
+    <section class="container-fluid py-4 px-3 px-md-4">
+
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
+
+        <a th:href="@{/book/list}" class="btn btn-outline-secondary btn-sm mb-4">
+            <i class="bi bi-arrow-left"></i> 返回列表
+        </a>
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h4 class="card-title mb-4" style="color:#37352F;" th:text="${book.title}"></h4>
+
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted ps-0" style="width:80px">作者</td>
+                                <td th:text="${book.author}"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">分类</td>
+                                <td th:text="${book.category}"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">可借数量</td>
+                                <td>
+                                    <span th:if="${book.quantity > 0}" class="badge bg-success" th:text="${book.quantity} + ' 册'"></span>
+                                    <span th:if="${book.quantity <= 0}" class="badge bg-danger">借完</span>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <hr style="border-color:#E9E9E7;">
+
+                        <form th:if="${book.quantity > 0}" method="post" th:action="@{/book/borrow}" class="d-inline">
+                            <input type="hidden" name="bookId" th:value="${book.id}">
+                            <button type="submit" class="btn btn-notion">
+                                <i class="bi bi-bookmark-plus"></i> 借阅此书
+                            </button>
+                        </form>
+                        <form th:if="${myBorrow != null}" method="post" th:action="@{/book/return}" class="d-inline">
+                            <input type="hidden" name="bookId" th:value="${book.id}">
+                            <button type="submit" class="btn btn-notion-warning">
+                                <i class="bi bi-arrow-return-left"></i> 归还此书
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ==================== 读者评价区域 ==================== -->
+                <div class="card mt-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-0" style="color:#37352F;">
+                            <i class="bi bi-chat-square-text"></i> 读者评价
+                            <span class="ms-2" th:if="${reviewCount > 0}" style="color:#2D6A4F;">
+                                <span th:each="i : ${#numbers.sequence(1, 5)}">
+                                    <span th:text="${i <= avgRating ? '★' : '☆'}"></span>
+                                </span>
+                                <span th:text="${avgRatingStr}"></span>
+                                <small class="text-muted" th:text="'（共' + ${reviewCount} + '条）'"></small>
+                            </span>
+                            <small class="text-muted" th:unless="${reviewCount > 0}">（暂无评价）</small>
+                        </h5>
+                    </div>
+
+                    <!-- 已有书评列表 -->
+                    <div th:if="${reviewCount > 0}">
+                        <div th:each="r : ${reviews}" class="border-top px-4 py-3" style="border-color:#E9E9E7 !important;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong style="color:#37352F;" th:text="${r.username}"></strong>
+                                    <span class="ms-2" th:each="i : ${#numbers.sequence(1, r.rating)}" style="color:#2D6A4F;">★</span>
+                                    <small class="text-muted ms-2" th:text="${#temporals.format(r.createTime, 'yyyy-MM-dd HH:mm')}"></small>
+                                </div>
+                                <a th:if="${session.user.id == r.userId or session.user.role == 'admin'}"
+                                   th:href="@{/review/delete(id=${r.id})}"
+                                   class="small text-decoration-none"
+                                   style="color:#9D3B6B;"
+                                   onclick="return confirm('确定删除这条评价吗？')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                            <p class="mt-2 mb-0" style="color:#37352F;" th:if="${r.content}" th:text="${r.content}"></p>
+                            <p class="mt-2 mb-0 text-muted fst-italic" th:unless="${r.content}">（仅打分，未写评价）</p>
+                        </div>
+                    </div>
+
+                    <!-- 写评价表单 -->
+                    <div class="border-top px-4 py-3" style="border-color:#E9E9E7 !important;background:#F7F6F3;">
+                        <form method="post" th:action="@{/review/add}">
+                            <input type="hidden" name="bookId" th:value="${book.id}">
+                            <div class="mb-3">
+                                <label class="form-label small mb-1">评分</label>
+                                <div class="star-rating" id="starRating">
+                                    <span class="star" data-value="1">★</span>
+                                    <span class="star" data-value="2">★</span>
+                                    <span class="star" data-value="3">★</span>
+                                    <span class="star" data-value="4">★</span>
+                                    <span class="star" data-value="5">★</span>
+                                </div>
+                                <input type="hidden" name="rating" id="ratingInput" value="0">
+                                <div class="alert alert-danger py-2 mt-2" id="ratingError" style="display:none;">请先选择评分（1-5星）</div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small mb-1">评价内容（可选）</label>
+                                <textarea name="content" class="form-control form-control-sm" rows="2" placeholder="写下你的读后感..."></textarea>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-notion btn-sm">
+                                    <i class="bi bi-send"></i> 提交评价
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</main>
+
+<th:block th:replace="~{fragments/common-scripts :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common-head :: head('注册')}"></head>
+<body class="d-flex align-items-center justify-content-center" style="min-height:100vh;background:#F7F6F3;">
+
+<div style="width:400px;">
+    <div class="text-center mb-4">
+        <i class="bi bi-person-plus" style="font-size:2.5rem;color:#2D6A4F;"></i>
+        <h4 class="mt-2" style="color:#37352F;">注册新账号</h4>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="card">
+        <div class="card-body p-4">
+            <form action="/doRegister" method="post">
+                <div class="mb-3">
+                    <label class="form-label text-muted">用户名</label>
+                    <input type="text" name="username" class="form-control" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">密码</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted">验证码</label>
+                    <div class="input-group">
+                        <input type="text" name="code" class="form-control" required maxlength="4">
+                        <img src="/captcha" onclick="this.src='/captcha?' + new Date().getTime()"
+                             style="cursor:pointer;height:38px;border:1px solid #E9E9E7;border-radius:0 8px 8px 0;">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-notion w-100">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <p class="text-center mt-3">
+        <a href="/login" style="color:#787774;text-decoration:none;">已有账号？去登录</a>
+    </p>
+</div>
+
+</body>
+</html>

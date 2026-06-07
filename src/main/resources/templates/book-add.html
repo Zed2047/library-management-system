@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common-head :: head('添加图书')}"></head>
+<body class="d-flex">
+
+<th:block th:replace="~{fragments/sidebar :: sidebar}"></th:block>
+
+<main class="content-area flex-grow-1">
+    <th:block th:replace="~{fragments/header :: header('添加图书')}"></th:block>
+
+    <section class="container-fluid py-4 px-3 px-md-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-4" style="color:#37352F;">添加新书</h5>
+                        <form method="post" th:action="@{/book/add}">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">书名</label>
+                                <input type="text" name="title" class="form-control" required autofocus>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">作者</label>
+                                <input type="text" name="author" class="form-control" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted">分类</label>
+                                <input type="text" name="category" class="form-control" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted">数量</label>
+                                <input type="number" name="quantity" class="form-control" value="1" min="0" required>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-notion">
+                                    <i class="bi bi-check-lg"></i> 保存
+                                </button>
+                                <a th:href="@{/book/list}" class="btn btn-outline-secondary">取消</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</main>
+
+<th:block th:replace="~{fragments/common-scripts :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common-head :: head('登录')}"></head>
+<body class="d-flex align-items-center justify-content-center" style="min-height:100vh;background:#F7F6F3;">
+
+<div style="width:400px;">
+    <div class="text-center mb-4">
+        <i class="bi bi-book-half" style="font-size:2.5rem;color:#2D6A4F;"></i>
+        <h4 class="mt-2" style="color:#37352F;">图书管理系统</h4>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
+
+    <div class="card">
+        <div class="card-body p-4">
+            <h5 class="card-title text-center mb-4" style="color:#37352F;">用户登录</h5>
+            <form action="/doLogin" method="post">
+                <div class="mb-3">
+                    <label class="form-label text-muted">用户名</label>
+                    <input type="text" name="username" class="form-control" required autofocus>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted">密码</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-notion w-100">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <p class="text-center mt-3">
+        <a href="/register" style="color:#787774;text-decoration:none;">没有账号？去注册</a>
+    </p>
+</div>
+
+</body>
+</html>

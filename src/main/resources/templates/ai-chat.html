@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common-head :: head('AI 助手')}"></head>
+<body class="d-flex">
+
+<th:block th:replace="~{fragments/sidebar :: sidebar}"></th:block>
+
+<main class="content-area flex-grow-1 d-flex flex-column" style="max-height:100vh;background:#F7F6F3;">
+
+    <th:block th:replace="~{fragments/header :: header('AI 助手')}"></th:block>
+
+    <!-- 消息区域 -->
+    <div class="flex-grow-1 overflow-auto" id="chatMessages">
+        <div class="chat-inner mx-auto px-4 py-4">
+
+            <!-- 欢迎消息 -->
+            <div th:if="${#lists.isEmpty(histories)}" class="text-center" style="padding:64px 0;">
+                <div class="avatar-icon avatar-ai-lg">
+                    <i class="bi bi-stars"></i>
+                </div>
+                <p class="mt-4 mb-2" style="font-size:1.35rem;font-weight:600;color:#37352F;">你好，我是小书</p>
+                <p style="color:#787774;font-size:0.95rem;line-height:1.6;max-width:360px;margin:0 auto;">
+                    你的图书管理助手，可以推荐书籍、解读内容、匹配书友
+                </p>
+            </div>
+
+            <!-- 历史消息 -->
+            <div th:each="h : ${histories}" style="margin-bottom:20px;">
+                <!-- AI 消息 -->
+                <div th:if="${h.role == 'assistant'}" class="d-flex gap-3">
+                    <div class="avatar-icon avatar-ai">
+                        <i class="bi bi-stars"></i>
+                    </div>
+                    <div class="flex-grow-1" style="min-width:0;">
+                        <div class="msg-label">小书</div>
+                        <div class="msg-bubble msg-ai" th:utext="${h.content}"></div>
+                    </div>
+                </div>
+                <!-- 用户消息 -->
+                <div th:if="${h.role == 'user'}" class="d-flex gap-3 justify-content-end">
+                    <div style="max-width:85%;min-width:0;">
+                        <div class="msg-label" style="text-align:right;">你</div>
+                        <div class="msg-bubble msg-user" th:text="${h.content}"></div>
+                    </div>
+                    <div class="avatar-icon avatar-user">
+                        <i class="bi bi-person"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <div style="border-top:1px solid #E9E9E7;background:#fff;">
+        <div class="chat-inner mx-auto px-4">
+
+            <!-- 快捷按钮 -->
+            <div class="d-flex flex-wrap gap-2" style="padding:16px 0 12px;">
+                <button class="notion-chip" style="background:#E4F4F1;color:#2D6A4F;"
+                        onclick="quickSend('帮我推荐几本适合我的书')">
+                    <i class="bi bi-bookmarks me-1"></i> 推荐书单
+                </button>
+                <button class="notion-chip" style="background:#FFEDD5;color:#9C6B2D;"
+                        onclick="quickSend('帮我分析一下我的阅读偏好，推荐口味相似的书友')">
+                    <i class="bi bi-people me-1"></i> 找书友
+                </button>
+                <button class="notion-chip" style="background:#FCE7F3;color:#9D3B6B;"
+                        onclick="clearHistory()">
+                    <i class="bi bi-trash me-1"></i> 清空对话
+                </button>
+            </div>
+
+            <!-- 输入区 -->
+            <div style="padding-bottom:24px;">
+                <div class="d-flex gap-3">
+                    <input type="text" id="messageInput" class="chat-input flex-grow-1"
+                           placeholder="输入你的问题，按 Enter 发送..."
+                           onkeydown="if(event.key==='Enter')sendMessage()">
+                    <button class="send-btn" onclick="sendMessage()">
+                        发送&nbsp;↵
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<th:block th:replace="~{fragments/common-scripts :: scripts}"></th:block>
+
+<script>
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        appendMessage('user', message);
+        input.value = '';
+        showTyping();
+
+        fetch('/ai/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'message=' + encodeURIComponent(message)
+        })
+        .then(res => res.json())
+        .then(data => {
+            let reply = data.reply.replace(/《(.+?)》/g, function(match, title) {
+                const found = data.books && data.books.find(b => b.title === title);
+                if (found) {
+                    return '《<a href="/book/detail?id=' + found.id + '" style="color:#2D6A4F;font-weight:600;">' + title + '</a>》';
+                }
+                return match;
+            });
+            replaceTyping(reply);
+        })
+        .catch(err => {
+            replaceTyping('抱歉，发送失败，请稍后再试。');
+        });
+    }
+
+    function showTyping() {
+        const inner = document.getElementById('chatMessages').querySelector('.chat-inner');
+        const wrapper = document.createElement('div');
+        wrapper.id = 'typingIndicator';
+        wrapper.style.marginBottom = '20px';
+        wrapper.innerHTML =
+            '<div class="d-flex gap-3">' +
+            '<div class="avatar-icon avatar-ai"><i class="bi bi-stars"></i></div>' +
+            '<div class="flex-grow-1" style="min-width:0;">' +
+            '<div class="msg-label">小书</div>' +
+            '<div class="msg-bubble msg-ai typing-bubble">' +
+            '<span class="typing-dot"></span>' +
+            '<span class="typing-dot"></span>' +
+            '<span class="typing-dot"></span>' +
+            '</div></div>';
+        inner.appendChild(wrapper);
+        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    }
+
+    function replaceTyping(content) {
+        const indicator = document.getElementById('typingIndicator');
+        if (!indicator) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.style.marginBottom = '20px';
+        wrapper.style.opacity = '0';
+        wrapper.style.transform = 'translateY(12px)';
+        wrapper.style.transition = 'opacity 350ms ease, transform 350ms ease';
+        wrapper.innerHTML =
+            '<div class="d-flex gap-3">' +
+            '<div class="avatar-icon avatar-ai"><i class="bi bi-stars"></i></div>' +
+            '<div class="flex-grow-1" style="min-width:0;">' +
+            '<div class="msg-label">小书</div>' +
+            '<div class="msg-bubble msg-ai">' + content + '</div>' +
+            '</div></div>';
+
+        indicator.replaceWith(wrapper);
+
+        // 触发淡入
+        requestAnimationFrame(() => {
+            wrapper.style.opacity = '1';
+            wrapper.style.transform = 'translateY(0)';
+        });
+
+        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    }
+
+    function appendMessage(role, content) {
+        const inner = document.getElementById('chatMessages').querySelector('.chat-inner');
+        const wrapper = document.createElement('div');
+        wrapper.style.marginBottom = '20px';
+
+        if (role === 'user') {
+            wrapper.innerHTML =
+                '<div class="d-flex gap-3 justify-content-end">' +
+                '<div style="max-width:85%;min-width:0;">' +
+                '<div class="msg-label" style="text-align:right;">你</div>' +
+                '<div class="msg-bubble msg-user">' + escapeHtml(content) + '</div>' +
+                '</div>' +
+                '<div class="avatar-icon avatar-user"><i class="bi bi-person"></i></div>' +
+                '</div>';
+        } else {
+            wrapper.innerHTML =
+                '<div class="d-flex gap-3">' +
+                '<div class="avatar-icon avatar-ai"><i class="bi bi-stars"></i></div>' +
+                '<div class="flex-grow-1" style="min-width:0;">' +
+                '<div class="msg-label">小书</div>' +
+                '<div class="msg-bubble msg-ai">' + content + '</div>' +
+                '</div></div>';
+        }
+        inner.appendChild(wrapper);
+        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    }
+
+    function quickSend(message) {
+        document.getElementById('messageInput').value = message;
+        sendMessage();
+    }
+
+    function clearHistory() {
+        if (!confirm('确定清空所有对话记录吗？')) return;
+        fetch('/ai/clear', { method: 'POST' })
+        .then(() => location.reload());
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+
+<style>
+    /* ===== 居中列 ===== */
+    .chat-inner {
+        width: 100%;
+        max-width: 720px;
+    }
+
+    /* ===== 头像图标 ===== */
+    .avatar-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 7px;
+        border: 1px solid #E9E9E7;
+        flex-shrink: 0;
+    }
+    .avatar-icon i {
+        font-size: 1.05rem;
+    }
+    .avatar-ai {
+        background: #fff;
+        color: #2D6A4F;
+    }
+    .avatar-user {
+        background: #F7F6F3;
+        color: #787774;
+    }
+    .avatar-ai-lg {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        background: #fff;
+        border: 1px solid #E9E9E7;
+        color: #2D6A4F;
+    }
+    .avatar-ai-lg i {
+        font-size: 1.5rem;
+    }
+
+    /* ===== 名字标签 ===== */
+    .msg-label {
+        font-size: 0.83rem;
+        color: #B0ADA7;
+        font-weight: 500;
+        margin-bottom: 5px;
+        letter-spacing: 0.02em;
+    }
+
+    /* ===== 消息气泡通用 ===== */
+    .msg-bubble {
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 15px;
+        line-height: 1.65;
+        word-break: break-word;
+        box-shadow: 0 1px 4px rgba(15,15,15,0.04);
+    }
+
+    /* ===== AI 气泡 ===== */
+    .msg-ai {
+        background: #fff;
+        border: 1px solid #E9E9E7;
+        color: #37352F;
+    }
+    .msg-ai a {
+        color: #2D6A4F;
+        font-weight: 500;
+    }
+    .msg-ai a:hover {
+        text-decoration: underline;
+    }
+
+    /* ===== 用户气泡 ===== */
+    .msg-user {
+        background: #fff;
+        border: 1px solid #E9E9E7;
+        border-left: 3px solid #D1E7DD;
+        color: #37352F;
+    }
+
+    /* ===== 滚动区 ===== */
+    #chatMessages {
+        scroll-behavior: smooth;
+    }
+
+    /* ===== 输入框 ===== */
+    .chat-input {
+        background: #F7F6F3;
+        border: 1px solid #E9E9E7;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 15px;
+        color: #37352F;
+        outline: none;
+        transition: border-color 200ms ease, box-shadow 200ms ease;
+    }
+    .chat-input::placeholder {
+        color: #B0ADA7;
+    }
+    .chat-input:focus {
+        background: #fff;
+        border-color: #B8D9CB;
+        box-shadow: 0 0 0 3px rgba(209,231,221,0.45);
+    }
+
+    /* ===== 发送按钮 ===== */
+    .send-btn {
+        background: #37352F;
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 200ms ease, box-shadow 200ms ease;
+        flex-shrink: 0;
+    }
+    .send-btn:hover {
+        background: #4A4742;
+        box-shadow: 0 2px 8px rgba(55,53,47,0.12);
+    }
+
+    /* ===== Notion 风格快捷 chips ===== */
+    .notion-chip {
+        border: none;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: all 200ms ease;
+        font-weight: 450;
+    }
+    .notion-chip:hover {
+        filter: brightness(0.94);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(15,15,15,0.06);
+    }
+
+    /* ===== 覆盖 header-bar ===== */
+    .header-bar {
+        background: #fff !important;
+        border-bottom: 1px solid #E9E9E7 !important;
+    }
+    .header-bar h1,
+    .header-bar .h5 {
+        color: #37352F !important;
+    }
+    .header-bar .btn-outline-secondary {
+        color: #787774 !important;
+        border-color: #E9E9E7 !important;
+        background: transparent !important;
+    }
+    .header-bar .btn-outline-secondary:hover {
+        color: #37352F !important;
+        background: #F7F6F3 !important;
+    }
+    .header-bar .text-muted {
+        color: #787774 !important;
+    }
+
+    /* ===== 打字指示器 ===== */
+    .typing-bubble {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 16px;
+        min-width: 56px;
+    }
+    .typing-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #B0ADA7;
+        animation: typingBounce 1.3s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes typingBounce {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.3;
+        }
+        30% {
+            transform: translateY(-6px);
+            opacity: 1;
+        }
+    }
+
+    /* ===== 覆盖 sidebar active link ===== */
+    .sidebar .nav-link.active::before {
+        background: linear-gradient(90deg, #2D6A4F, #40916C) !important;
+    }
+    .sidebar .nav-link.active {
+        box-shadow: 0 8px 20px rgba(45,106,79,0.18) !important;
+    }
+</style>
+
+</body>
+</html>

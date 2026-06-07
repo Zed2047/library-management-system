@@ -1,0 +1,332 @@
+:root {
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 88px;
+    --sidebar-bg: #1f2937;
+    --sidebar-active: #2D6A4F;
+    --content-bg: #F7F6F3;
+    --ink: #37352F;
+    --muted: #787774;
+    --faint: #B0ADA7;
+    --border: #E9E9E7;
+    --surface: #fff;
+    --mint-bg: #E4F4F1;
+    --mint-text: #2D6A4F;
+    --peach-bg: #FFEDD5;
+    --peach-text: #9C6B2D;
+    --rose-bg: #FCE7F3;
+    --rose-text: #9D3B6B;
+    --sand-bg: #FEF3C7;
+    --sand-text: #8B6914;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--content-bg);
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: var(--sidebar-width);
+    padding: 1rem 0;
+    background: radial-gradient(circle at 20% 20%, #334155 0%, var(--sidebar-bg) 35%, #111827 100%);
+    transition: width 0.25s ease;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1030;
+}
+
+.brand {
+    letter-spacing: 0.04em;
+}
+
+/* ===== Navigation links ===== */
+.sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    color: #cbd5e1;
+    padding: 0.8rem 1.15rem;
+    transition: color 0.2s ease;
+    position: relative;
+    z-index: 0;
+}
+
+.sidebar .nav-link::before {
+    content: "";
+    position: absolute;
+    inset: 0 -180px 0 0;
+    z-index: -1;
+    transition: background 0.2s ease;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    color: #fff;
+}
+
+.sidebar .nav-link:hover::before {
+    background: rgba(148, 163, 184, 0.22);
+}
+
+.sidebar .nav-link:focus-visible {
+    outline: 2px solid var(--sidebar-active);
+    outline-offset: -2px;
+}
+
+.sidebar .nav-link.active {
+    box-shadow: 0 8px 20px rgba(45, 106, 79, 0.2);
+}
+
+.sidebar .nav-link.active::before {
+    background: linear-gradient(90deg, var(--sidebar-active), #40916C);
+}
+
+/* ===== Main content area ===== */
+.content-area {
+    background-color: var(--content-bg);
+    min-height: 100vh;
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.25s ease;
+}
+
+/* ===== Collapsed sidebar ===== */
+body.sidebar-collapsed .sidebar {
+    width: var(--sidebar-collapsed-width);
+}
+
+body.sidebar-collapsed .content-area {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+body.sidebar-collapsed .brand-text,
+body.sidebar-collapsed .menu-text {
+    display: none;
+}
+
+body.sidebar-collapsed .sidebar .nav-link {
+    justify-content: center;
+    padding-inline: 0;
+}
+
+body.sidebar-collapsed .sidebar .nav-link i {
+    font-size: 1.15rem;
+}
+
+/* ===== Card ===== */
+.card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(15, 15, 15, 0.04);
+}
+
+/* ===== Table ===== */
+.table {
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(15, 15, 15, 0.04);
+    border: 1px solid var(--border);
+}
+
+.table thead th {
+    background: #FAFAF9;
+    border-bottom: 2px solid var(--border);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.table tbody td {
+    vertical-align: middle;
+    color: var(--ink);
+}
+
+.table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid var(--border);
+}
+
+/* ===== Badge ===== */
+.badge {
+    font-weight: 500;
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+}
+
+/* Notion-style status badges */
+.badge.bg-success,
+.badge.bg-success.bg-opacity-10 {
+    background: var(--mint-bg) !important;
+    color: var(--mint-text) !important;
+}
+
+.badge.bg-danger,
+.badge.bg-danger.bg-opacity-10 {
+    background: var(--rose-bg) !important;
+    color: var(--rose-text) !important;
+}
+
+.badge.bg-warning,
+.badge.bg-warning.bg-opacity-10 {
+    background: var(--peach-bg) !important;
+    color: var(--peach-text) !important;
+}
+
+/* ===== Form controls ===== */
+.form-control:focus {
+    border-color: #B8D9CB;
+    box-shadow: 0 0 0 3px rgba(209, 231, 221, 0.4);
+}
+
+/* ===== Buttons ===== */
+.btn-outline-secondary {
+    border-color: var(--border);
+    color: var(--muted);
+}
+
+.btn-outline-secondary:hover {
+    background: #F7F6F3;
+    color: var(--ink);
+    border-color: var(--border);
+}
+
+/* Notion primary button — replaces btn-info */
+.btn-notion {
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 8px;
+    color: #fff;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-notion:hover {
+    background: #4A4742;
+    border-color: #4A4742;
+    box-shadow: 0 2px 8px rgba(55, 53, 47, 0.12);
+    color: #fff;
+}
+
+.btn-notion-warning {
+    background: var(--peach-bg);
+    border: none;
+    border-radius: 8px;
+    color: var(--peach-text);
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-notion-warning:hover {
+    filter: brightness(0.94);
+    color: var(--peach-text);
+}
+
+.btn-notion-danger {
+    background: var(--rose-bg);
+    border: none;
+    border-radius: 8px;
+    color: var(--rose-text);
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-notion-danger:hover {
+    filter: brightness(0.94);
+    color: var(--rose-text);
+}
+
+/* ===== Header bar ===== */
+.header-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.header-bar h1,
+.header-bar .h5 {
+    color: var(--ink) !important;
+}
+
+/* ===== Star rating ===== */
+.star-rating {
+    display: inline-flex;
+    gap: 4px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    user-select: none;
+}
+.star-rating .star {
+    color: var(--border);
+    transition: color 0.1s;
+}
+.star-rating .star.active {
+    color: #2D6A4F;
+}
+
+/* ===== Alerts ===== */
+.alert {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.alert-danger {
+    background: #FEF2F2;
+    border-color: #FECACA;
+    color: #991B1B;
+}
+.alert-warning {
+    background: #FFF7ED;
+    border-color: #FED7AA;
+    color: #9A3412;
+}
+.alert-success {
+    background: #F0FDF4;
+    border-color: #BBF7D0;
+    color: #166534;
+}
+
+/* ===== Empty state ===== */
+.empty-state {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--faint);
+}
+
+/* ===== Table row highlights ===== */
+.table-danger {
+    --bs-table-bg: #FEF2F2;
+    --bs-table-color-state: #991B1B;
+}
+.table-warning {
+    --bs-table-bg: #FFF7ED;
+    --bs-table-color-state: #9A3412;
+}
+
+/* ===== Links ===== */
+a:not(.nav-link):not(.btn):not(.dropdown-item):not(.sidebar *) {
+    color: var(--mint-text);
+    font-weight: 500;
+}
+a:not(.nav-link):not(.btn):not(.dropdown-item):not(.sidebar *):hover {
+    color: #40916C;
+}
+
+/* ===== Footer / muted context ===== */
+.text-muted {
+    color: var(--muted) !important;
+}
+.text-secondary {
+    color: var(--muted) !important;
+}

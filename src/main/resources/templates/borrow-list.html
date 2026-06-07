@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common-head :: head('借阅记录')}"></head>
+<body class="d-flex">
+
+<th:block th:replace="~{fragments/sidebar :: sidebar}"></th:block>
+
+<main class="content-area flex-grow-1">
+    <th:block th:replace="~{fragments/header :: header('借阅记录')}"></th:block>
+
+    <section class="container-fluid py-4 px-3 px-md-4">
+
+        <form class="row g-2 mb-3" method="get" th:action="@{/borrow/list}">
+            <div class="col-md-4">
+                <input type="text" name="keyword" class="form-control form-control-sm"
+                       placeholder="搜索借阅者或图书名..."
+                       th:value="${keyword}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-notion btn-sm">
+                    <i class="bi bi-search"></i> 搜索
+                </button>
+                <a th:href="@{/borrow/list}" class="btn btn-outline-secondary btn-sm">重置</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width:60px">#</th>
+                        <th>借阅者</th>
+                        <th>图书</th>
+                        <th>借阅时间</th>
+                        <th>到期时间</th>
+                        <th>归还时间</th>
+                        <th style="width:100px">状态</th>
+                        <th style="width:80px">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="borrow, stat : ${borrows}" th:classappend="${borrow.overdue} ? 'table-danger' : (${borrow.dueSoon} ? 'table-warning' : '')">
+                        <td class="text-muted" th:text="${stat.index + 1}"></td>
+                        <td th:text="${borrow.username}"></td>
+                        <td th:text="${borrow.bookTitle}"></td>
+                        <td th:text="${#temporals.format(borrow.borrowTime, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${#temporals.format(borrow.dueTime, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td>
+                            <span th:if="${borrow.returnTime != null}" th:text="${#temporals.format(borrow.returnTime, 'yyyy-MM-dd HH:mm')}"></span>
+                            <span th:unless="${borrow.returnTime != null}">-</span>
+                        </td>
+                        <td>
+                            <span th:if="${borrow.status == 0}" class="badge bg-warning">借出中</span>
+                            <span th:if="${borrow.status == 1}" class="badge bg-success">已归还</span>
+                        </td>
+                        <td>
+                            <form th:if="${borrow.status == 0}" method="post" th:action="@{/book/return}">
+                                <input type="hidden" name="borrowId" th:value="${borrow.id}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-arrow-return-left"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+</main>
+
+<th:block th:replace="~{fragments/common-scripts :: scripts}"></th:block>
+</body>
+</html>

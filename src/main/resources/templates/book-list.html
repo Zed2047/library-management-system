@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common-head :: head('图书列表')}"></head>
+<body class="d-flex">
+
+<th:block th:replace="~{fragments/sidebar :: sidebar}"></th:block>
+
+<main class="content-area flex-grow-1">
+    <th:block th:replace="~{fragments/header :: header('图书列表')}"></th:block>
+
+    <section class="container-fluid py-4 px-3 px-md-4">
+
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <form th:action="@{/book/list}" method="get" class="row g-2 flex-grow-1">
+                <div class="col-8 col-md-5">
+                    <input type="text" name="keyword" th:value="${keyword}" class="form-control"
+                           placeholder="搜索书名、作者或分类...">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="bi bi-search"></i> 搜索
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <a th:href="@{/book/list}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-repeat"></i> 全部
+                    </a>
+                </div>
+            </form>
+            <a th:if="${session.user.role == 'admin'}" th:href="@{/book/toAdd}"
+               class="btn btn-notion ms-2">
+                <i class="bi bi-plus-lg"></i> 添加
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width:50px">#</th>
+                        <th style="width:26%">书名</th>
+                        <th style="width:16%">作者</th>
+                        <th style="width:12%">分类</th>
+                        <th style="width:11%">库存</th>
+                        <th style="width:180px">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="book, stat : ${books}">
+                        <td class="text-muted" th:text="${stat.index + 1}"></td>
+                        <td><strong th:text="${book.title}"></strong></td>
+                        <td class="text-muted text-truncate" style="max-width:120px" th:text="${book.author}"></td>
+                        <td class="text-muted" th:text="${book.category}"></td>
+                        <td>
+                            <span th:if="${book.quantity > 0}" class="badge bg-success"
+                                  th:text="'可借(' + ${book.quantity} + ')'"></span>
+                            <span th:if="${book.quantity <= 0}" class="badge bg-danger">借完</span>
+                        </td>
+                        <td class="text-nowrap">
+                            <a th:href="@{/book/detail(id=${book.id})}"
+                               class="btn btn-outline-secondary btn-sm me-1" title="查看详情">
+                                <i class="bi bi-info-circle"></i> 详情
+                            </a>
+                            <a th:if="${session.user.role == 'admin'}"
+                               th:href="@{/book/toEdit(id=${book.id})}"
+                               class="btn btn-outline-secondary btn-sm me-1" title="编辑">
+                                <i class="bi bi-pencil"></i> 编辑
+                            </a>
+                            <a th:if="${session.user.role == 'admin'}"
+                               th:href="@{/book/delete(id=${book.id})}"
+                               class="btn btn-outline-danger btn-sm" title="删除"
+                               onclick="return confirm('确定删除这本书吗？')">
+                                <i class="bi bi-trash"></i> 删除
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+</main>
+
+<th:block th:replace="~{fragments/common-scripts :: scripts}"></th:block>
+</body>
+</html>
