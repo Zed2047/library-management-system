@@ -41,4 +41,3 @@ CLAUDE.md
 memory/
 .claude/
 sample_data.sql
-application-local.yml
